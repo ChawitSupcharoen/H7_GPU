@@ -154,16 +154,6 @@ Error_Handler();
 //
 //  HAL_Delay(2000);
 //
-  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
-  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
-
-  HAL_Delay(1000);
-
-  start_Vsync_Sequence();
-
-  HAL_Delay(1000);
-
-  start_Hsync_Sequence();
 
 
   /* USER CODE END 2 */
@@ -176,7 +166,19 @@ Error_Handler();
 
     /* USER CODE BEGIN 3 */
 
+	  TIM2->PSC = 99;
+	  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
+	  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
 
+	  HAL_Delay(200);
+
+	  start_Vsync_Sequence();
+
+	  HAL_Delay(200);
+
+	  start_Hsync_Sequence();
+
+	  HAL_Delay(200);
 
   }
   /* USER CODE END 3 */
@@ -574,7 +576,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
 
 		if (pulse_iter == 0x00){
 			GPIOE->ODR = 0x8001;
-			TIM2->ARR = 45;
+//			TIM2->ARR = 45;
+			TIM2->ARR = 39;
 		}
 		else if (pulse_iter == 0x01){
 			GPIOE->ODR = 0x8001;
@@ -602,7 +605,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
 		}
 		else if (pulse_iter == 0x12){
 			GPIOE->ODR = 0x8000;
-			TIM2->ARR = 78675;
+//			TIM2->ARR = 78675;
+			TIM2->ARR = 79599;
 		}
 		else if (pulse_iter == 0x13){
 			GPIOE->ODR = 0x8001;
