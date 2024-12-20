@@ -154,8 +154,11 @@ Error_Handler();
 //
 //  HAL_Delay(2000);
 //
-//  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
-//  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
+  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
+  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
+
+  HAL_Delay(1000);
+
   start_Vsync_Sequence();
 
   HAL_Delay(1000);
