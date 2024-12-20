@@ -158,6 +158,10 @@ Error_Handler();
 //  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
   start_Vsync_Sequence();
 
+  HAL_Delay(1000);
+
+  start_Hsync_Sequence();
+
 
   /* USER CODE END 2 */
 
@@ -254,7 +258,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 44;
+  htim2.Init.Period = 1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -528,23 +532,19 @@ void start_Hsync_Sequence(){
 
 
 	// Setup presecaler
-	TIM2->PSC = 0;
-//	TIM2->PSC = 99;
+//	TIM2->PSC = 0;
+	TIM2->PSC = 99;
 
-
-	// Setup first sequence
-
-	// Setup pulse sequence
+	// Choose pulse sequence
 	pulse_iter = 0;
 
-	pulse_sequence[0] = 285;
-	pulse_sequence[1] = 143;
-	pulse_sequence[2] = 0;
-
-	TIM2->ARR = 47;
-	TIM2->CNT = 0;
-	HAL_TIM_Base_Start_IT(&htim2);
+	// Show width of pulse
+	// TODO: Remove later
 	GPIOB->ODR = 0xffff;
+
+	// Run the timer
+	HAL_TIM_Base_Start_IT(&htim2);
+
 }
 
 
@@ -555,20 +555,13 @@ void start_Vsync_Sequence(){
 	TIM2->PSC = 0;
 
 
-	// Setup first sequence
+	// Choose pulse sequence
+	pulse_iter = 0x10;
 
-
-	// Setup pulse sequence
-	pulse_iter = 0;
-
-	pulse_sequence[0] = 4751;
-	pulse_sequence[1] = 78675;
-	pulse_sequence[2] = 0;
-
-	TIM2->ARR = 23827;
-	TIM2->CNT = 0;
-	HAL_TIM_Base_Start_IT(&htim2);
+	// Show width of pulse
+	// TODO: Remove later
 	GPIOB->ODR = 0xffff;
+	HAL_TIM_Base_Start_IT(&htim2);
 }
 
 
@@ -576,28 +569,53 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
 
 	if(htim == &htim2){
 
-		if (pulse_iter == 0){
-
+		if (pulse_iter == 0x00){
 			GPIOE->ODR = 0x8001;
+			TIM2->ARR = 45;
 		}
-		else if (pulse_iter == 1){
+		else if (pulse_iter == 0x01){
+			GPIOE->ODR = 0x8001;
+			TIM2->ARR = 285;
+		}
+		else if (pulse_iter == 0x02){
 
 			GPIOE->ODR = 0x0001;
+			TIM2->ARR = 143;
 		}
-		else if (pulse_iter == 2){
+		else if (pulse_iter == 0x03){
 
 			GPIOE->ODR = 0x8001;
+			TIM2->ARR = 1;
+		}
+
+
+		else if (pulse_iter == 0x10){
+			GPIOE->ODR = 0x8001;
+			TIM2->ARR = 23827;
+		}
+		else if (pulse_iter == 0x11){
+			GPIOE->ODR = 0x8001;
+			TIM2->ARR = 4751;
+		}
+		else if (pulse_iter == 0x12){
+			GPIOE->ODR = 0x8000;
+			TIM2->ARR = 78675;
+		}
+		else if (pulse_iter == 0x13){
+			GPIOE->ODR = 0x8001;
+			TIM2->ARR = 1;
+
 		}
 
 
 
 		else{
-			GPIOB->ODR = 0x0000;
 			HAL_TIM_Base_Stop_IT(&htim2);
+			GPIOB->ODR = 0x0000;
 
 		}
 
-		TIM2->ARR = pulse_sequence[pulse_iter];
+//		TIM2->ARR = pulse_sequence[pulse_iter];
 		pulse_iter++;
 
 
