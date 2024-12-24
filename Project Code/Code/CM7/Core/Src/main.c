@@ -54,7 +54,7 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-uint16_t test_frame[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+uint16_t test_frame[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0};
 uint32_t pulse_sequence[3] = {0,0,0};
 uint16_t pulse_iter = 0;
 /* USER CODE END PV */
@@ -148,8 +148,8 @@ Error_Handler();
   HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
   hdma_tim3_ch1.XferCpltCallback = endof_scan_line;
 
-//  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
-//  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
+  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 15);
+  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
 //
 //
 //  HAL_Delay(2000);
@@ -166,19 +166,18 @@ Error_Handler();
 
     /* USER CODE BEGIN 3 */
 
-	  TIM2->PSC = 99;
-	  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
-	  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
+//	  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)test_frame, (uint32_t) &GPIOB->ODR, 16);
+//	  __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
+//
+//	  HAL_Delay(200);
+//
+//	  start_Hsync_Sequence();
+//
+//	  HAL_Delay(200);
 
-	  HAL_Delay(200);
-
-	  start_Vsync_Sequence();
-
-	  HAL_Delay(200);
-
-	  start_Hsync_Sequence();
-
-	  HAL_Delay(200);
+//	  start_Hsync_Sequence();
+//
+//	  HAL_Delay(200);
 
   }
   /* USER CODE END 3 */
@@ -307,7 +306,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 99;
+  htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 5;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -529,23 +528,16 @@ void endof_scan_line(DMA_HandleTypeDef* _hdma){
 	__HAL_DMA_CLEAR_FLAG(&hdma_tim3_ch1, DMA_FLAG_TCIF0_4);
 
 	// Setup for Hsync sequence
-
+//	start_Hsync_Sequence();
+	pulse_iter = 0;
+	HAL_TIM_Base_Start_IT(&htim2);
 	return;
 }
 
 void start_Hsync_Sequence(){
 
-
-	// Setup presecaler
-//	TIM2->PSC = 0;
-	TIM2->PSC = 99;
-
 	// Choose pulse sequence
 	pulse_iter = 0;
-
-	// Show width of pulse
-	// TODO: Remove later
-	GPIOB->ODR = 0xffff;
 
 	// Run the timer
 	HAL_TIM_Base_Start_IT(&htim2);
@@ -556,16 +548,9 @@ void start_Hsync_Sequence(){
 void start_Vsync_Sequence(){
 
 
-	// Setup presecaler
-	TIM2->PSC = 0;
-
-
 	// Choose pulse sequence
 	pulse_iter = 0x10;
 
-	// Show width of pulse
-	// TODO: Remove later
-	GPIOB->ODR = 0xffff;
 	HAL_TIM_Base_Start_IT(&htim2);
 }
 
@@ -618,7 +603,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
 
 		else{
 			HAL_TIM_Base_Stop_IT(&htim2);
-			GPIOB->ODR = 0x0000;
 
 		}
 
