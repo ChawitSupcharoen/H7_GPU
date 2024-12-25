@@ -134,14 +134,15 @@ Error_Handler();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-//  hdma_tim3_ch1.XferCpltCallback = end_of_scanline;
+  hdma_tim3_ch1.XferCpltCallback = end_of_scanline;
 
   TIM3->DIER |= 1 << 14;
   TIM3->DIER |= 1 << 9;
 
   HAL_TIM_Base_Start(&htim3);
   HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
-  HAL_DMAEx_MultiBufferStart_IT(&hdma_tim3_ch1, (uint32_t)frame, (uint32_t)&GPIOB->ODR, (uint32_t)(frame + (400*490)), 400);
+  HAL_DMAEx_MultiBufferStart_IT(&hdma_tim3_ch1, (uint32_t)frame, (uint32_t)&GPIOB->ODR, (uint32_t)(frame + 400), 400);
+  line = line + 2;
   __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
 
   /* USER CODE END 2 */
@@ -383,17 +384,21 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void end_of_scanline(){
 
+	__HAL_DMA_CLEAR_FLAG(&hdma_tim3_ch1, DMA_FLAG_TCIF0_4);
+
 	line++;
 
 	if(line >= 525){
 		line = 0;
 	}
 
-	if(DMA1_Stream0->CR & (1<<18)){
-		DMA1_Stream0->M0AR = (uint32_t)(frame + (line * 400));
+	if((DMA1_Stream0->CR) & (1<<19)){
+		HAL_DMAEx_ChangeMemory(&hdma_tim3_ch1, (uint32_t)(frame + (line * 400)), MEMORY0);
+
+
 	}
 	else{
-		DMA1_Stream0->M0AR = (uint32_t)(frame + (line * 400));
+		HAL_DMAEx_ChangeMemory(&hdma_tim3_ch1, (uint32_t)(frame + (line * 400)), MEMORY1);
 	}
 
 
