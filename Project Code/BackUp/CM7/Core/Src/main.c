@@ -52,6 +52,8 @@ UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 volatile uint16_t line = 0;
+volatile uint16_t scanline[400] = {0};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,6 +64,7 @@ static void MX_TIM3_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void end_of_scanline();
+void half_of_scanline();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -131,13 +134,14 @@ Error_Handler();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+//  hdma_tim3_ch1.XferCpltCallback = end_of_scanline;
 
-  hdma_tim3_ch1.XferCpltCallback = end_of_scanline;
   TIM3->DIER |= 1 << 14;
   TIM3->DIER |= 1 << 9;
+
   HAL_TIM_Base_Start(&htim3);
   HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
-  HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)frame, (uint32_t)&GPIOB->ODR, 400);
+  HAL_DMAEx_MultiBufferStart_IT(&hdma_tim3_ch1, (uint32_t)frame, (uint32_t)&GPIOB->ODR, (uint32_t)(frame + (400*490)), 400);
   __HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
 
   /* USER CODE END 2 */
@@ -377,7 +381,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 void end_of_scanline(){
 
 	line++;
@@ -386,10 +389,17 @@ void end_of_scanline(){
 		line = 0;
 	}
 
-	HAL_DMA_Start_IT(&hdma_tim3_ch1, (uint32_t)(frame+(line*400)), (uint32_t)&GPIOB->ODR, 400);
-	__HAL_TIM_ENABLE_DMA(&htim3, TIM_DMA_CC1);
+	if(DMA1_Stream0->CR & (1<<18)){
+		DMA1_Stream0->M0AR = (uint32_t)(frame + (line * 400));
+	}
+	else{
+		DMA1_Stream0->M0AR = (uint32_t)(frame + (line * 400));
+	}
+
+
 
 }
+
 /* USER CODE END 4 */
 
 /**
