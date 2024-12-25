@@ -133,11 +133,12 @@ Error_Handler();
   MX_TIM3_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  hdma_tim3_ch1.XferHalfCpltCallback = half_of_scanline;
   hdma_tim3_ch1.XferCpltCallback = end_of_scanline;
 
   TIM3->DIER |= 1 << 14;
   TIM3->DIER |= 1 << 9;
+  DMA1_Stream0->CR |= DMA_SxCR_HTIE;
 
   HAL_TIM_Base_Start(&htim3);
   HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
@@ -382,6 +383,24 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void half_of_scanline(){
+	__HAL_DMA_CLEAR_FLAG(&hdma_tim3_ch1, DMA_FLAG_HTIF0_4);
+
+	line++;
+
+	if(line >= 525){
+		line = 0;
+	}
+
+	if((DMA1_Stream0->CR & DMA_SxCR_CT)){
+		HAL_DMAEx_ChangeMemory(&hdma_tim3_ch1, (uint32_t)(frame + (line * 400)), MEMORY0);
+
+
+	}
+	else{
+		HAL_DMAEx_ChangeMemory(&hdma_tim3_ch1, (uint32_t)(frame + (line * 400)), MEMORY1);
+	}
+}
 void end_of_scanline(){
 
 	__HAL_DMA_CLEAR_FLAG(&hdma_tim3_ch1, DMA_FLAG_TCIF0_4);
@@ -392,7 +411,7 @@ void end_of_scanline(){
 		line = 0;
 	}
 
-	if((DMA1_Stream0->CR) & (1<<19)){
+	if((DMA1_Stream0->CR & DMA_SxCR_CT)){
 		HAL_DMAEx_ChangeMemory(&hdma_tim3_ch1, (uint32_t)(frame + (line * 400)), MEMORY0);
 
 
